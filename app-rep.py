@@ -150,13 +150,17 @@ st.markdown(
     /* Alert banner */
     .alert-banner {{
         background-color: {BANNER_BG};
-        color: {BANNER_TEXT};
+        color: #5C3D00 !important;
         border-left: 5px solid {ORANGE};
         border-radius: 8px;
         padding: 12px 18px;
         font-weight: 700;
         font-size: 0.95rem;
         margin: 6px 0 16px 0;
+    }}
+    .alert-banner * {{
+        color: #5C3D00 !important;
+        opacity: 1 !important;
     }}
 
     /* Section card wrapper */
@@ -223,9 +227,24 @@ st.markdown(
         font-weight: 600;
         color: {NAVY_DARK};
     }}
+    /* Streamlit membungkus label tab di <p> dengan opacity/warna sendiri untuk
+       tab yang tidak aktif — timpa langsung supaya tetap kelihatan jelas */
+    .stTabs [data-baseweb="tab"] p,
+    .stTabs [data-baseweb="tab"] div,
+    .stTabs [data-baseweb="tab"] span {{
+        color: {NAVY_DARK} !important;
+        opacity: 1 !important;
+        font-weight: 600 !important;
+    }}
     .stTabs [aria-selected="true"] {{
         background-color: {NAVY} !important;
         color: #FFFFFF !important;
+    }}
+    .stTabs [aria-selected="true"] p,
+    .stTabs [aria-selected="true"] div,
+    .stTabs [aria-selected="true"] span {{
+        color: #FFFFFF !important;
+        opacity: 1 !important;
     }}
 
     /* Dataframe header */
