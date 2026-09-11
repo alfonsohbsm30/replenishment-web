@@ -4,9 +4,13 @@ Global Inventory & Replenishment Analytics
 Dashboard analisis inventory & replenishment ala SCM/Inventory Analyst,
 dilengkapi data sintetis global (multi-region, multi-kategori, multi-SKU).
 
+UI/UX terinspirasi dari template Excel "Inventory Management System":
+header banner biru navy tegas, kartu KPI berwarna solid (navy/teal/oranye/merah),
+banner peringatan kuning untuk item kritis, badge status berwarna, dan tabel bersih.
+
 Cara jalankan:
     pip install streamlit pandas numpy plotly
-    streamlit run app.py
+    streamlit run app-rep.py
 """
 
 import numpy as np
@@ -14,6 +18,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from datetime import datetime
 
 # -----------------------------------------------------------------------
 # PAGE CONFIG
@@ -26,30 +31,203 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------
+# DESIGN TOKENS (diselaraskan dengan template Excel "Inventory Management")
+# -----------------------------------------------------------------------
+NAVY_DARK = "#16233F"     # header utama & footer
+NAVY = "#1E3A5F"          # kartu KPI netral / header tabel
+ACCENT_BLUE = "#2E75B6"   # garis aksen tipis
+TEAL = "#127C63"          # kartu KPI "nilai / sehat"
+ORANGE = "#C1770F"        # kartu KPI "peringatan" & badge Medium/High
+RED = "#C0392B"           # kartu KPI "kritis" & badge Critical
+BG_PAGE = "#F3F5F9"       # latar halaman
+BG_CARD = "#FFFFFF"       # latar card/table
+BANNER_BG = "#FCEFC7"     # banner peringatan kuning
+BANNER_TEXT = "#7A5300"
+TEXT_MUTED = "#5B6472"
+
+# -----------------------------------------------------------------------
 # STYLING
 # -----------------------------------------------------------------------
 st.markdown(
-    """
+    f"""
     <style>
-    .main {background-color: #0e1117;}
-    div[data-testid="stMetric"] {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 14px 16px;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"] {{
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }}
+
+    .stApp {{
+        background-color: {BG_PAGE};
+    }}
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {{
+        background-color: {NAVY_DARK};
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: #E8ECF3 !important;
+    }}
+    section[data-testid="stSidebar"] hr {{
+        border-color: rgba(255,255,255,0.15);
+    }}
+
+    /* Hero header banner */
+    .app-header {{
+        background: linear-gradient(90deg, {NAVY_DARK} 0%, {NAVY} 100%);
         border-radius: 10px;
-    }
-    div[data-testid="stMetricLabel"] {font-size: 0.85rem; color: #9aa4b2;}
-    h1, h2, h3 {font-family: 'Segoe UI', sans-serif;}
-    .stTabs [data-baseweb="tab-list"] {gap: 4px;}
-    .stTabs [data-baseweb="tab"] {
-        background-color: #161b22;
+        padding: 28px 32px 22px 32px;
+        margin-bottom: 4px;
+    }}
+    .app-header h1 {{
+        color: #FFFFFF;
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: 0.2px;
+    }}
+    .app-header p {{
+        color: #C9D4E3;
+        margin: 6px 0 0 0;
+        font-size: 0.95rem;
+    }}
+    .app-header-accent {{
+        height: 5px;
+        background: {ACCENT_BLUE};
+        border-radius: 0 0 6px 6px;
+        margin-bottom: 22px;
+    }}
+
+    /* KPI cards */
+    .kpi-card {{
+        border-radius: 10px;
+        padding: 16px 18px;
+        color: #FFFFFF;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(16,25,46,0.12);
+    }}
+    .kpi-label {{
+        font-size: 0.78rem;
+        font-weight: 600;
+        opacity: 0.9;
+        text-transform: none;
+        margin-bottom: 4px;
+    }}
+    .kpi-value {{
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }}
+    .kpi-sub {{
+        font-size: 0.72rem;
+        opacity: 0.85;
+        margin-top: 3px;
+    }}
+
+    /* Alert banner */
+    .alert-banner {{
+        background-color: {BANNER_BG};
+        color: {BANNER_TEXT};
+        border-left: 5px solid {ORANGE};
+        border-radius: 8px;
+        padding: 12px 18px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin: 6px 0 16px 0;
+    }}
+
+    /* Section card wrapper */
+    .section-card {{
+        background-color: {BG_CARD};
+        border: 1px solid #E3E7EE;
+        border-radius: 10px;
+        padding: 18px 20px 8px 20px;
+        margin-bottom: 18px;
+    }}
+    .section-title {{
+        font-size: 1rem;
+        font-weight: 700;
+        color: {NAVY_DARK};
+        margin-bottom: 10px;
+    }}
+
+    /* Status badges */
+    .badge {{
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-align: center;
+        min-width: 64px;
+    }}
+    .badge-critical {{ background-color: {RED}; }}
+    .badge-high {{ background-color: {ORANGE}; }}
+    .badge-medium {{ background-color: #D8A32B; }}
+    .badge-low {{ background-color: {TEAL}; }}
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {{gap: 4px;}}
+    .stTabs [data-baseweb="tab"] {{
+        background-color: #E8ECF3;
         border-radius: 8px 8px 0 0;
-        padding: 8px 16px;
-    }
+        padding: 8px 18px;
+        font-weight: 600;
+        color: {NAVY_DARK};
+    }}
+    .stTabs [aria-selected="true"] {{
+        background-color: {NAVY} !important;
+        color: #FFFFFF !important;
+    }}
+
+    /* Dataframe header */
+    div[data-testid="stDataFrame"] thead tr th {{
+        background-color: {NAVY} !important;
+        color: #FFFFFF !important;
+    }}
+
+    /* Footer */
+    .app-footer {{
+        background-color: {NAVY_DARK};
+        color: #AEB9C9;
+        font-style: italic;
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }}
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+def kpi_card(label: str, value: str, color: str, sub: str = "") -> str:
+    """Render satu kartu KPI bergaya solid seperti template Excel."""
+    sub_html = f'<div class="kpi-sub">{sub}</div>' if sub else ""
+    return f"""
+    <div class="kpi-card" style="background-color:{color};">
+        <div class="kpi-label">{label}</div>
+        <div class="kpi-value">{value}</div>
+        {sub_html}
+    </div>
+    """
+
+
+def risk_badge(risk: str) -> str:
+    cls_map = {
+        "Critical": "badge-critical",
+        "High": "badge-high",
+        "Medium": "badge-medium",
+        "Low": "badge-low",
+    }
+    return f'<span class="badge {cls_map.get(risk, "badge-low")}">{risk}</span>'
+
 
 # -----------------------------------------------------------------------
 # DATA GENERATION (SYNTHETIC GLOBAL DATASET)
@@ -155,7 +333,7 @@ df = generate_data()
 # -----------------------------------------------------------------------
 # SIDEBAR FILTERS
 # -----------------------------------------------------------------------
-st.sidebar.title("📦 Filter Data")
+st.sidebar.markdown("## 📦 Filter Data")
 st.sidebar.caption("Global Inventory & Replenishment Dashboard")
 
 region_sel = st.sidebar.multiselect("Region", sorted(df["region"].unique()), default=sorted(df["region"].unique()))
@@ -179,25 +357,42 @@ st.sidebar.caption(f"Menampilkan **{len(filtered):,}** dari **{len(df):,}** SKU"
 st.sidebar.caption("Data: synthetic demo dataset, generated on the fly.")
 
 # -----------------------------------------------------------------------
-# HEADER + KPI
+# HEADER
 # -----------------------------------------------------------------------
-st.title("📦 Global Inventory & Replenishment Dashboard")
-st.caption("Ringkasan kesehatan inventory, sinyal replenishment, dan prioritas aksi lintas region & kategori.")
+st.markdown(
+    f"""
+    <div class="app-header">
+        <h1>📦 GLOBAL INVENTORY &amp; REPLENISHMENT DASHBOARD</h1>
+        <p>Laporan per : {datetime.now().strftime("%d %B %Y")} &nbsp;|&nbsp; Ringkasan kesehatan inventory, sinyal replenishment, dan prioritas aksi lintas region &amp; kategori.</p>
+    </div>
+    <div class="app-header-accent"></div>
+    """,
+    unsafe_allow_html=True,
+)
 
+# -----------------------------------------------------------------------
+# KPI CARDS
+# -----------------------------------------------------------------------
 total_value = filtered["inventory_value"].sum()
 total_skus = filtered["sku_id"].nunique()
 below_rop_count = filtered["below_rop"].sum()
 critical_count = (filtered["stockout_risk"] == "Critical").sum()
-avg_dos = filtered["days_of_supply"].mean()
+avg_dos = filtered["days_of_supply"].mean() if len(filtered) else 0
 
-c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Total Inventory Value", f"${total_value:,.0f}")
-c2.metric("Total SKU Aktif", f"{total_skus:,}")
-c3.metric("SKU di Bawah ROP", f"{below_rop_count:,}", delta=f"{below_rop_count/total_skus*100:.1f}% dari total" if total_skus else "0")
-c4.metric("SKU Risiko Critical", f"{critical_count:,}")
-c5.metric("Rata-rata Days of Supply", f"{avg_dos:.1f} hari")
+k1, k2, k3, k4, k5 = st.columns(5)
+with k1:
+    st.markdown(kpi_card("TOTAL INVENTORY VALUE", f"${total_value:,.0f}", NAVY), unsafe_allow_html=True)
+with k2:
+    st.markdown(kpi_card("TOTAL SKU AKTIF", f"{total_skus:,}", ACCENT_BLUE), unsafe_allow_html=True)
+with k3:
+    pct_rop = f"{below_rop_count/total_skus*100:.1f}% dari total" if total_skus else "0%"
+    st.markdown(kpi_card("SKU DI BAWAH ROP", f"{below_rop_count:,}", ORANGE, pct_rop), unsafe_allow_html=True)
+with k4:
+    st.markdown(kpi_card("SKU RISIKO CRITICAL", f"{critical_count:,}", RED), unsafe_allow_html=True)
+with k5:
+    st.markdown(kpi_card("RATA-RATA DAYS OF SUPPLY", f"{avg_dos:.1f} hari", TEAL), unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------
 # TABS
@@ -224,10 +419,13 @@ with tab1:
             orientation="h",
             text_auto=".2s",
             title="Inventory Value per Region",
-            color="inventory_value",
-            color_continuous_scale="Blues",
+            color_discrete_sequence=[ACCENT_BLUE],
         )
-        fig_region.update_layout(showlegend=False, coloraxis_showscale=False, height=380)
+        fig_region.update_traces(marker_color=ACCENT_BLUE)
+        fig_region.update_layout(
+            showlegend=False, height=380, plot_bgcolor="white", paper_bgcolor="white",
+            font_color=NAVY_DARK, title_font_size=15,
+        )
         st.plotly_chart(fig_region, use_container_width=True)
 
     with colB:
@@ -237,10 +435,10 @@ with tab1:
             values=risk_summary.values,
             title="Distribusi Stockout Risk",
             color=risk_summary.index,
-            color_discrete_map={"Critical": "#e74c3c", "High": "#e67e22", "Medium": "#f1c40f", "Low": "#2ecc71"},
-            hole=0.45,
+            color_discrete_map={"Critical": RED, "High": ORANGE, "Medium": "#D8A32B", "Low": TEAL},
+            hole=0.5,
         )
-        fig_risk.update_layout(height=380)
+        fig_risk.update_layout(height=380, paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_risk, use_container_width=True)
 
     colC, colD = st.columns(2)
@@ -254,9 +452,9 @@ with tab1:
             values="inventory_value",
             title="Inventory Value: Region → Country",
             color="inventory_value",
-            color_continuous_scale="Teal",
+            color_continuous_scale=[TEAL, NAVY],
         )
-        fig_tree.update_layout(height=420)
+        fig_tree.update_layout(height=420, paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_tree, use_container_width=True)
 
     with colD:
@@ -268,40 +466,55 @@ with tab1:
             orientation="h",
             title="Rata-rata Days of Supply per Kategori",
             color="days_of_supply",
-            color_continuous_scale="RdYlGn",
+            color_continuous_scale=[RED, ORANGE, TEAL],
         )
-        fig_dos.update_layout(height=420, coloraxis_showscale=False)
+        fig_dos.update_layout(height=420, coloraxis_showscale=False, plot_bgcolor="white", paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_dos, use_container_width=True)
 
 # --- TAB 2: REPLENISHMENT PRIORITY ---
 with tab2:
-    st.subheader("🚨 SKU yang Butuh Tindakan Replenishment")
     action_df = filtered[filtered["below_rop"]].copy()
     action_df = action_df.sort_values(["stockout_risk", "abc_class", "days_of_supply"])
 
-    st.write(
-        f"**{len(action_df):,} SKU** saat ini berada di bawah Reorder Point (ROP) dan memerlukan order."
+    st.markdown(
+        f"""<div class="alert-banner">⚠️ {len(action_df):,} SKU saat ini berada di bawah Reorder Point (ROP) dan memerlukan tindakan order segera.</div>""",
+        unsafe_allow_html=True,
     )
 
-    display_cols = [
-        "sku_id", "item", "region", "country", "category", "supplier",
-        "on_hand_qty", "open_po_qty", "reorder_point", "days_of_supply",
-        "stockout_risk", "abc_class", "suggested_order_qty", "unit_cost",
-    ]
-    st.dataframe(
-        action_df[display_cols].style.format(
+    display_df = action_df.copy()
+    display_df["Status"] = display_df["stockout_risk"].apply(risk_badge)
+    display_cols_map = {
+        "sku_id": "SKU",
+        "item": "Item",
+        "region": "Region",
+        "country": "Country",
+        "category": "Kategori",
+        "supplier": "Supplier",
+        "on_hand_qty": "On Hand",
+        "open_po_qty": "Open PO",
+        "reorder_point": "ROP",
+        "days_of_supply": "Days of Supply",
+        "Status": "Status",
+        "abc_class": "ABC",
+        "suggested_order_qty": "Suggested Order Qty",
+        "unit_cost": "Unit Cost",
+    }
+    table_html = display_df[list(display_cols_map.keys())].rename(columns=display_cols_map)
+    st.markdown('<div class="section-card"><div class="section-title">Daftar SKU yang Butuh Replenishment</div>', unsafe_allow_html=True)
+    st.write(
+        table_html.style.format(
             {
-                "on_hand_qty": "{:,.0f}",
-                "open_po_qty": "{:,.0f}",
-                "reorder_point": "{:,.0f}",
-                "days_of_supply": "{:.1f}",
-                "suggested_order_qty": "{:,.0f}",
-                "unit_cost": "${:.2f}",
+                "On Hand": "{:,.0f}",
+                "Open PO": "{:,.0f}",
+                "ROP": "{:,.0f}",
+                "Days of Supply": "{:.1f}",
+                "Suggested Order Qty": "{:,.0f}",
+                "Unit Cost": "${:.2f}",
             }
-        ),
-        use_container_width=True,
-        height=420,
+        ).to_html(escape=False, index=False),
+        unsafe_allow_html=True,
     )
+    st.markdown("</div>", unsafe_allow_html=True)
 
     colE, colF = st.columns(2)
     with colE:
@@ -314,10 +527,10 @@ with tab2:
             y="item",
             orientation="h",
             color="stockout_risk",
-            color_discrete_map={"Critical": "#e74c3c", "High": "#e67e22", "Medium": "#f1c40f", "Low": "#2ecc71"},
+            color_discrete_map={"Critical": RED, "High": ORANGE, "Medium": "#D8A32B", "Low": TEAL},
             title="Top 10 Estimasi Nilai Order Replenishment",
         )
-        fig_order.update_layout(height=420, yaxis={"categoryorder": "total ascending"})
+        fig_order.update_layout(height=420, yaxis={"categoryorder": "total ascending"}, plot_bgcolor="white", paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_order, use_container_width=True)
 
     with colF:
@@ -330,10 +543,10 @@ with tab2:
             y="supplier",
             orientation="h",
             title="Total Suggested Order Qty per Supplier",
-            color="suggested_order_qty",
-            color_continuous_scale="Purples",
+            color_discrete_sequence=[NAVY],
         )
-        fig_supplier.update_layout(height=420, coloraxis_showscale=False)
+        fig_supplier.update_traces(marker_color=NAVY)
+        fig_supplier.update_layout(height=420, plot_bgcolor="white", paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_supplier, use_container_width=True)
 
 # --- TAB 3: ABC & CATEGORY ---
@@ -349,10 +562,10 @@ with tab3:
             y="inventory_value",
             text_auto=".2s",
             color="abc_class",
-            color_discrete_map={"A": "#2ecc71", "B": "#f1c40f", "C": "#e74c3c"},
+            color_discrete_map={"A": TEAL, "B": ORANGE, "C": RED},
             title="Inventory Value per ABC Class",
         )
-        fig_abc.update_layout(height=400, showlegend=False)
+        fig_abc.update_layout(height=400, showlegend=False, plot_bgcolor="white", paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_abc, use_container_width=True)
 
     with colH:
@@ -363,10 +576,10 @@ with tab3:
             size="inventory_value",
             color="abc_class",
             hover_name="item",
-            color_discrete_map={"A": "#2ecc71", "B": "#f1c40f", "C": "#e74c3c"},
+            color_discrete_map={"A": TEAL, "B": ORANGE, "C": RED},
             title="Demand vs Lead Time (bubble = inventory value)",
         )
-        fig_scatter.update_layout(height=400)
+        fig_scatter.update_layout(height=400, plot_bgcolor="white", paper_bgcolor="white", font_color=NAVY_DARK, title_font_size=15)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
     cat_summary = (
@@ -380,24 +593,29 @@ with tab3:
         .reset_index()
         .sort_values("inventory_value", ascending=False)
     )
-    st.subheader("Ringkasan per Kategori")
+    st.markdown('<div class="section-card"><div class="section-title">Ringkasan per Kategori</div>', unsafe_allow_html=True)
     st.dataframe(
         cat_summary.style.format(
             {"inventory_value": "${:,.0f}", "avg_dos": "{:.1f}"}
         ),
         use_container_width=True,
     )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 4: RAW DATA ---
 with tab4:
-    st.subheader("📋 Detail Seluruh SKU (sesuai filter)")
+    st.markdown('<div class="section-card"><div class="section-title">📋 Detail Seluruh SKU (sesuai filter)</div>', unsafe_allow_html=True)
     st.dataframe(filtered.reset_index(drop=True), use_container_width=True, height=550)
     csv = filtered.to_csv(index=False).encode("utf-8")
     st.download_button("⬇️ Download data (CSV)", csv, "inventory_replenishment_data.csv", "text/csv")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption(
-    "Dashboard demo — data bersifat sintetis untuk keperluan ilustrasi analisis SCM/Inventory Management. "
-    "Metodologi: ROP = (rata-rata demand harian × lead time) + safety stock; "
-    "Safety stock = Z × σ_demand × √(lead time); ABC class berdasarkan kontribusi kumulatif nilai konsumsi."
+st.markdown(
+    """
+    <div class="app-footer">
+        Global Inventory &amp; Replenishment Dashboard &nbsp;|&nbsp; Data bersifat sintetis untuk ilustrasi analisis SCM/Inventory Management &nbsp;|&nbsp;
+        ROP = (rata-rata demand harian × lead time) + safety stock &nbsp;|&nbsp; Safety stock = Z × σ_demand × √(lead time) &nbsp;|&nbsp; © 2026
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
