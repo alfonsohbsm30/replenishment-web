@@ -57,8 +57,18 @@ st.markdown(
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }}
 
+    /* Paksa variabel tema dasar Streamlit supaya semua widget bawaan
+       (multiselect, radio, dataframe grid, tombol) ikut kontras terang/gelap
+       yang benar, bukan cuma elemen custom kita saja */
+    :root, .stApp {{
+        --text-color: {NAVY_DARK};
+        --background-color: {BG_CARD};
+        --secondary-background-color: {BG_PAGE};
+    }}
+
     .stApp {{
         background-color: {BG_PAGE};
+        color: {NAVY_DARK};
     }}
 
     /* Sidebar */
@@ -221,6 +231,25 @@ st.markdown(
     /* Dataframe header */
     div[data-testid="stDataFrame"] thead tr th {{
         background-color: {NAVY} !important;
+        color: #FFFFFF !important;
+    }}
+    div[data-testid="stDataFrame"] {{
+        background-color: {BG_CARD};
+    }}
+
+    /* Tombol (Refresh Data, Download CSV, dll) */
+    .stButton > button, .stDownloadButton > button {{
+        background-color: {NAVY};
+        color: #FFFFFF !important;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }}
+    .stButton > button:hover, .stDownloadButton > button:hover {{
+        background-color: {ACCENT_BLUE};
+        color: #FFFFFF !important;
+    }}
+    .stButton > button p, .stDownloadButton > button p {{
         color: #FFFFFF !important;
     }}
 
