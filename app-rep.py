@@ -230,78 +230,53 @@ def risk_badge(risk: str) -> str:
 
 
 # -----------------------------------------------------------------------
-# DATA GENERATION (SYNTHETIC GLOBAL DATASET)
+# SUMBER DATA: GOOGLE SHEET (live "database") + fallback data sintetis
 # -----------------------------------------------------------------------
-@st.cache_data
-def generate_data(seed: int = 42) -> pd.DataFrame:
-    rng = np.random.default_rng(seed)
+# Ganti dua nilai ini sesuai Google Sheet kamu:
+#   SHEET_ID -> bagian ".../d/<SHEET_ID>/edit..." pada URL Google Sheet
+#   SHEET_GID -> id tab/sheet (lihat "gid=..." pada URL saat tab dibuka)
+# Sheet WAJIB di-share "Anyone with the link -> Viewer" agar bisa dibaca.
+SHEET_ID = "16Txk46U1WRGtLCuuO-cZ4-ZDtQFYk7gYrXvpqk7Dq28"
+SHEET_GID = "316587509"  # ganti dengan gid tab "RawData" milikmu
 
-    regions = {
-        "North America": ["USA", "Canada", "Mexico"],
-        "Europe": ["Germany", "France", "Netherlands", "UK"],
-        "Asia Pacific": ["Indonesia", "China", "Japan", "Australia"],
-        "Latin America": ["Brazil", "Chile"],
-        "Middle East & Africa": ["UAE", "South Africa"],
-    }
+RAW_COLUMNS = {
+    "SKU ID": "sku_id",
+    "Region": "region",
+    "Country": "country",
+    "Category": "category",
+    "Item": "item",
+    "Supplier": "supplier",
+    "Lead Time (days)": "lead_time_days",
+    "Daily Demand Avg": "daily_demand_avg",
+    "Demand Std Dev": "demand_std",
+    "Service Level (Z)": "service_level_z",
+    "On Hand Qty": "on_hand_qty",
+    "Unit Cost (USD)": "unit_cost",
+    "MOQ": "moq",
+    "Lot Size": "lot_size",
+    "Open PO Qty": "open_po_qty",
+}
 
-    categories = {
-        "Electronics": ["Smartphone Case", "USB-C Cable", "Bluetooth Speaker", "Power Bank"],
-        "Apparel": ["Cotton T-Shirt", "Running Shoes", "Denim Jacket"],
-        "Home & Living": ["LED Lamp", "Ceramic Mug", "Storage Box"],
-        "Food & Beverage": ["Instant Coffee", "Energy Bar", "Mineral Water 1L"],
-        "Industrial": ["Steel Bolt M8", "Hydraulic Hose", "Safety Gloves"],
-    }
 
-    suppliers = [f"Supplier-{c}" for c in ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]]
+def compute_derived_metrics(raw: pd.DataFrame) -> pd.DataFrame:
+    """Hitung safety stock, ROP, stockout risk, ABC class, dll dari kolom mentah."""
+    df = raw.copy()
 
-    rows = []
-    sku_id = 1000
-    for region, countries in regions.items():
-        for country in countries:
-            for category, items in categories.items():
-                for item in items:
-                    sku_id += 1
-                    lead_time = int(rng.integers(5, 45))
-                    daily_demand_avg = round(rng.uniform(3, 120), 1)
-                    demand_std = round(daily_demand_avg * rng.uniform(0.1, 0.5), 1)
-                    service_level_z = rng.choice([1.28, 1.65, 1.96, 2.05], p=[0.2, 0.4, 0.3, 0.1])
-                    safety_stock = round(service_level_z * demand_std * np.sqrt(lead_time), 0)
-                    reorder_point = round(daily_demand_avg * lead_time + safety_stock, 0)
-                    on_hand = round(max(0, rng.normal(reorder_point * rng.uniform(0.4, 1.8), reorder_point * 0.2)), 0)
-                    unit_cost = round(rng.uniform(1.5, 250), 2)
-                    moq = int(rng.choice([50, 100, 200, 500, 1000]))
-                    lot_size = int(rng.choice([100, 250, 500, 1000, 2000]))
-                    open_po_qty = int(rng.choice([0, 0, 0, moq, moq * 2]))
-                    days_of_supply = round(on_hand / daily_demand_avg, 1) if daily_demand_avg > 0 else 0
-                    abc_score = daily_demand_avg * unit_cost
+    numeric_cols = [
+        "lead_time_days", "daily_demand_avg", "demand_std", "service_level_z",
+        "on_hand_qty", "unit_cost", "moq", "lot_size", "open_po_qty",
+    ]
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df = df.dropna(subset=numeric_cols).reset_index(drop=True)
 
-                    rows.append(
-                        dict(
-                            sku_id=f"SKU-{sku_id}",
-                            region=region,
-                            country=country,
-                            category=category,
-                            item=item,
-                            supplier=rng.choice(suppliers),
-                            lead_time_days=lead_time,
-                            daily_demand_avg=daily_demand_avg,
-                            demand_std=demand_std,
-                            service_level_z=service_level_z,
-                            safety_stock=safety_stock,
-                            reorder_point=reorder_point,
-                            on_hand_qty=on_hand,
-                            unit_cost=unit_cost,
-                            moq=moq,
-                            lot_size=lot_size,
-                            open_po_qty=open_po_qty,
-                            days_of_supply=days_of_supply,
-                            abc_value=abc_score,
-                        )
-                    )
+    df["safety_stock"] = round(df["service_level_z"] * df["demand_std"] * np.sqrt(df["lead_time_days"]), 0)
+    df["reorder_point"] = round(df["daily_demand_avg"] * df["lead_time_days"] + df["safety_stock"], 0)
+    df["days_of_supply"] = np.where(
+        df["daily_demand_avg"] > 0, round(df["on_hand_qty"] / df["daily_demand_avg"], 1), 0
+    )
+    df["abc_value"] = df["daily_demand_avg"] * df["unit_cost"]
 
-    df = pd.DataFrame(rows)
-
-    # Replenishment logic
     df["inventory_position"] = df["on_hand_qty"] + df["open_po_qty"]
     df["below_rop"] = df["inventory_position"] < df["reorder_point"]
     df["suggested_order_qty"] = np.where(
@@ -316,7 +291,6 @@ def generate_data(seed: int = 42) -> pd.DataFrame:
     )
     df["inventory_value"] = df["on_hand_qty"] * df["unit_cost"]
 
-    # ABC classification (by cumulative value contribution)
     df = df.sort_values("abc_value", ascending=False).reset_index(drop=True)
     df["cum_pct"] = df["abc_value"].cumsum() / df["abc_value"].sum()
     df["abc_class"] = np.select(
@@ -324,17 +298,91 @@ def generate_data(seed: int = 42) -> pd.DataFrame:
         ["A", "B"],
         default="C",
     )
-
     return df
 
 
-df = generate_data()
+@st.cache_data(ttl=300, show_spinner=False)
+def load_data_from_gsheet(sheet_id: str, gid: str) -> pd.DataFrame:
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    raw = pd.read_csv(url)
+    raw = raw.rename(columns={k: v for k, v in RAW_COLUMNS.items() if k in raw.columns})
+    missing = set(RAW_COLUMNS.values()) - set(raw.columns)
+    if missing:
+        raise ValueError(f"Kolom hilang di Google Sheet: {', '.join(sorted(missing))}")
+    return compute_derived_metrics(raw)
+
+
+@st.cache_data
+def generate_dummy_data(seed: int = 42) -> pd.DataFrame:
+    """Fallback: data sintetis, dipakai kalau Google Sheet belum ter-setup/gagal diakses."""
+    rng = np.random.default_rng(seed)
+
+    regions = {
+        "North America": ["USA", "Canada", "Mexico"],
+        "Europe": ["Germany", "France", "Netherlands", "UK"],
+        "Asia Pacific": ["Indonesia", "China", "Japan", "Australia"],
+        "Latin America": ["Brazil", "Chile"],
+        "Middle East & Africa": ["UAE", "South Africa"],
+    }
+    categories = {
+        "Electronics": ["Smartphone Case", "USB-C Cable", "Bluetooth Speaker", "Power Bank"],
+        "Apparel": ["Cotton T-Shirt", "Running Shoes", "Denim Jacket"],
+        "Home & Living": ["LED Lamp", "Ceramic Mug", "Storage Box"],
+        "Food & Beverage": ["Instant Coffee", "Energy Bar", "Mineral Water 1L"],
+        "Industrial": ["Steel Bolt M8", "Hydraulic Hose", "Safety Gloves"],
+    }
+    suppliers = [f"Supplier-{c}" for c in ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]]
+
+    rows = []
+    sku_id = 1000
+    for region, countries in regions.items():
+        for country in countries:
+            for category, items in categories.items():
+                for item in items:
+                    sku_id += 1
+                    rows.append(dict(
+                        sku_id=f"SKU-{sku_id}",
+                        region=region,
+                        country=country,
+                        category=category,
+                        item=item,
+                        supplier=rng.choice(suppliers),
+                        lead_time_days=int(rng.integers(5, 45)),
+                        daily_demand_avg=round(rng.uniform(3, 120), 1),
+                        demand_std=round(rng.uniform(1, 30), 1),
+                        service_level_z=rng.choice([1.28, 1.65, 1.96, 2.05], p=[0.2, 0.4, 0.3, 0.1]),
+                        on_hand_qty=round(rng.uniform(0, 3000), 0),
+                        unit_cost=round(rng.uniform(1.5, 250), 2),
+                        moq=int(rng.choice([50, 100, 200, 500, 1000])),
+                        lot_size=int(rng.choice([100, 250, 500, 1000, 2000])),
+                        open_po_qty=int(rng.choice([0, 0, 0, 100, 200])),
+                    ))
+    return compute_derived_metrics(pd.DataFrame(rows))
+
 
 # -----------------------------------------------------------------------
-# SIDEBAR FILTERS
+# SIDEBAR: SUMBER DATA + FILTER
 # -----------------------------------------------------------------------
 st.sidebar.markdown("## 📦 Filter Data")
 st.sidebar.caption("Global Inventory & Replenishment Dashboard")
+
+data_source = st.sidebar.radio("Sumber Data", ["Google Sheet (Live)", "Data Dummy (Offline)"], index=0)
+
+if data_source == "Google Sheet (Live)":
+    try:
+        df = load_data_from_gsheet(SHEET_ID, SHEET_GID)
+        st.sidebar.success("Terhubung ke Google Sheet ✅")
+    except Exception as e:
+        st.sidebar.error(f"Gagal ambil data dari Google Sheet, pakai data dummy.\n\n{e}")
+        df = generate_dummy_data()
+else:
+    df = generate_dummy_data()
+
+if st.sidebar.button("🔄 Refresh Data"):
+    load_data_from_gsheet.clear()
+    st.rerun()
+
+st.sidebar.markdown("---")
 
 region_sel = st.sidebar.multiselect("Region", sorted(df["region"].unique()), default=sorted(df["region"].unique()))
 category_sel = st.sidebar.multiselect("Kategori", sorted(df["category"].unique()), default=sorted(df["category"].unique()))
@@ -354,7 +402,11 @@ filtered = df[
 
 st.sidebar.markdown("---")
 st.sidebar.caption(f"Menampilkan **{len(filtered):,}** dari **{len(df):,}** SKU")
-st.sidebar.caption("Data: synthetic demo dataset, generated on the fly.")
+st.sidebar.caption(
+    "Data ditarik langsung dari Google Sheet (cache 5 menit)."
+    if data_source == "Google Sheet (Live)"
+    else "Mode data dummy — tidak terhubung ke Google Sheet."
+)
 
 # -----------------------------------------------------------------------
 # HEADER
