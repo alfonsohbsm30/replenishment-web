@@ -319,7 +319,7 @@ def risk_badge(risk: str) -> str:
 #   SHEET_GID -> id tab/sheet (lihat "gid=..." pada URL saat tab dibuka)
 # Sheet WAJIB di-share "Anyone with the link -> Viewer" agar bisa dibaca.
 SHEET_ID = "16Txk46U1WRGtLCuuO-cZ4-ZDtQFYk7gYrXvpqk7Dq28"
-SHEET_GID = "0"  # ganti dengan gid tab "RawData" milikmu
+SHEET_GID = "316587509"  # ganti dengan gid tab "RawData" milikmu
 
 RAW_COLUMNS = {
     "SKU ID": "sku_id",
