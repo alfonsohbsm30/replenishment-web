@@ -71,6 +71,16 @@ st.markdown(
     section[data-testid="stSidebar"] hr {{
         border-color: rgba(255,255,255,0.15);
     }}
+    /* Alert box (success/error) di sidebar butuh kontras sendiri, jangan ikut ditimpa */
+    section[data-testid="stSidebar"] div[data-testid="stAlert"] {{
+        background-color: rgba(255,255,255,0.92) !important;
+        border-radius: 8px;
+    }}
+    section[data-testid="stSidebar"] div[data-testid="stAlert"] p,
+    section[data-testid="stSidebar"] div[data-testid="stAlert"] span,
+    section[data-testid="stSidebar"] div[data-testid="stAlert"] div {{
+        color: {NAVY_DARK} !important;
+    }}
 
     /* Hero header banner */
     .app-header {{
@@ -152,6 +162,30 @@ st.markdown(
         font-weight: 700;
         color: {NAVY_DARK};
         margin-bottom: 10px;
+    }}
+
+    /* Tabel HTML mentah (pandas Styler .to_html) di dalam section-card */
+    .section-card table {{
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }}
+    .section-card table th {{
+        background-color: {NAVY} !important;
+        color: #FFFFFF !important;
+        padding: 8px 10px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+    }}
+    .section-card table td {{
+        padding: 7px 10px;
+        color: {NAVY_DARK} !important;
+        border-bottom: 1px solid #E3E7EE;
+        background-color: {BG_CARD};
+    }}
+    .section-card table tr:nth-child(even) td {{
+        background-color: #F7F9FC;
     }}
 
     /* Status badges */
@@ -237,7 +271,7 @@ def risk_badge(risk: str) -> str:
 #   SHEET_GID -> id tab/sheet (lihat "gid=..." pada URL saat tab dibuka)
 # Sheet WAJIB di-share "Anyone with the link -> Viewer" agar bisa dibaca.
 SHEET_ID = "16Txk46U1WRGtLCuuO-cZ4-ZDtQFYk7gYrXvpqk7Dq28"
-SHEET_GID = "316587509"  # ganti dengan gid tab "RawData" milikmu
+SHEET_GID = "0"  # ganti dengan gid tab "RawData" milikmu
 
 RAW_COLUMNS = {
     "SKU ID": "sku_id",
