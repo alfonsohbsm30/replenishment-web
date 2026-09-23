@@ -36,10 +36,10 @@ CATEGORIES = ["Electronics", "Furniture", "Stationery", "Apparel", "Other"]
 if "inventory" not in st.session_state:
     st.session_state.inventory = pd.DataFrame(
         [
-            {"Product ID": "P1001", "Name": "Wireless Mouse", "Category": "Electronics", "Stock": 45, "Price": 25.99, "Reorder Level": 15},
-            {"Product ID": "P1002", "Name": "Mechanical Keyboard", "Category": "Electronics", "Stock": 8, "Price": 89.99, "Reorder Level": 10},
-            {"Product ID": "P1003", "Name": "Office Chair", "Category": "Furniture", "Stock": 14, "Price": 149.50, "Reorder Level": 5},
-            {"Product ID": "P1004", "Name": "Notebook Journal", "Category": "Stationery", "Stock": 3, "Price": 4.99, "Reorder Level": 20},
+            {"Product ID": "P1001", "Name": "Wireless Mouse", "Category": "Electronics", "Stock": 45, "Price": 259000, "Reorder Level": 15},
+            {"Product ID": "P1002", "Name": "Mechanical Keyboard", "Category": "Electronics", "Stock": 8, "Price": 899000, "Reorder Level": 10},
+            {"Product ID": "P1003", "Name": "Office Chair", "Category": "Furniture", "Stock": 14, "Price": 1495000, "Reorder Level": 5},
+            {"Product ID": "P1004", "Name": "Notebook Journal", "Category": "Stationery", "Stock": 3, "Price": 49900, "Reorder Level": 20},
         ]
     )
 
@@ -73,7 +73,7 @@ else:
     low_stock_count = len(low_stock_items)
 
 st.sidebar.metric("Products tracked", total_products)
-st.sidebar.metric("Inventory value", f"${total_value:,.2f}")
+st.sidebar.metric("Inventory value", f"Rp {total_value:,.0f}")
 
 # Export current inventory as CSV from anywhere in the app
 st.sidebar.download_button(
@@ -92,7 +92,7 @@ if app_mode == "Dashboard":
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Unique Products", total_products)
-    col2.metric("Total Inventory Value", f"${total_value:,.2f}")
+    col2.metric("Total Inventory Value", f"Rp {total_value:,.0f}")
     col3.metric("Low Stock Alerts ⚠️", low_stock_count)
 
     if low_stock_count > 0:
@@ -145,7 +145,7 @@ elif app_mode == "Manage Stock":
             "Product ID": st.column_config.TextColumn("Product ID", disabled=True, help="Locked — set when the product is created"),
             "Category": st.column_config.SelectboxColumn("Category", options=CATEGORIES),
             "Stock": st.column_config.NumberColumn("Current Stock", min_value=0, step=1),
-            "Price": st.column_config.NumberColumn("Price ($)", min_value=0.0, format="$%.2f"),
+            "Price": st.column_config.NumberColumn("Price (Rp)", min_value=0, step=1000, format="Rp %,.0f"),
             "Reorder Level": st.column_config.NumberColumn("Reorder Level", min_value=0, step=1),
         },
         key="stock_editor",
@@ -171,7 +171,7 @@ elif app_mode == "Add New Product":
             p_cat = st.selectbox("Category", CATEGORIES)
         with col2:
             p_stock = st.number_input("Initial Stock Level", min_value=0, value=0, step=1)
-            p_price = st.number_input("Unit Price ($)", min_value=0.0, value=0.0, step=0.01)
+            p_price = st.number_input("Unit Price (Rp)", min_value=0, value=0, step=1000)
             p_reorder = st.number_input("Reorder Threshold Alert", min_value=0, value=5, step=1)
 
         submit_button = st.form_submit_button("Add Item to System")
@@ -187,7 +187,7 @@ elif app_mode == "Add New Product":
                     "Name": p_name.strip(),
                     "Category": p_cat,
                     "Stock": int(p_stock),
-                    "Price": float(p_price),
+                    "Price": int(p_price),
                     "Reorder Level": int(p_reorder),
                 }
                 st.session_state.inventory = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
