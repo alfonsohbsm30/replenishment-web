@@ -1,0 +1,51 @@
+sku,product_name,category,quantity_on_hand,reorder_point,unit_of_measure,cost_per_unit,last_restock_date,units_used_30d,supplier,usage_rate_per_job,status
+SVC001,House Wash Detergent Concentrate,Chemicals,18,8,5-Gal Bucket,45.00,2024-02-01,12,ProClean Supply,0.5,Active
+SVC002,Roof Cleaning Solution,Chemicals,22,10,5-Gal Bucket,52.00,2024-01-28,8,ProClean Supply,0.75,Active
+SVC003,Concrete Degreaser,Chemicals,15,8,5-Gal Bucket,38.00,2024-02-05,10,ProClean Supply,0.5,Active
+SVC004,Deck Brightener,Chemicals,12,6,5-Gal Bucket,42.00,2024-01-20,7,ProClean Supply,1.0,Active
+SVC005,Window Cleaning Solution,Chemicals,28,12,1-Gal Bottle,12.50,2024-02-10,18,ProClean Supply,0.25,Active
+SVC006,Mildew Remover,Chemicals,9,8,5-Gal Bucket,48.00,2024-01-15,14,ProClean Supply,0.5,Low Stock
+SVC007,Gutter Cleaning Tablets,Chemicals,45,20,Box of 50,28.00,2024-02-08,22,ProClean Supply,2.0,Active
+SVC008,Surface Protectant Sealer,Chemicals,6,5,5-Gal Bucket,65.00,2024-01-18,8,ProClean Supply,1.0,Low Stock
+SVC009,25-Degree Nozzle Tips,Equipment Parts,32,15,Each,4.50,2024-02-03,8,Pressure Pro,0.5,Active
+SVC010,40-Degree Nozzle Tips,Equipment Parts,28,15,Each,4.50,2024-02-03,12,Pressure Pro,0.5,Active
+SVC011,0-Degree Nozzle Tips,Equipment Parts,18,10,Each,4.50,2024-02-03,5,Pressure Pro,0.2,Active
+SVC012,Soap Nozzle Tips,Equipment Parts,22,12,Each,5.25,2024-02-03,10,Pressure Pro,0.5,Active
+SVC013,3/8" High-Pressure Hose (50ft),Equipment Parts,5,4,Each,85.00,2024-01-25,3,Pressure Pro,0.1,Active
+SVC014,3/8" High-Pressure Hose (100ft),Equipment Parts,3,3,Each,145.00,2024-01-25,2,Pressure Pro,0.1,Active
+SVC015,Quick-Connect Fittings,Equipment Parts,48,20,Pack of 5,18.50,2024-02-12,15,Pressure Pro,1.0,Active
+SVC016,Pressure Washer Gun,Equipment Parts,4,3,Each,95.00,2024-01-12,2,Pressure Pro,0.05,Active
+SVC017,Extension Wand (24-inch),Equipment Parts,8,5,Each,42.00,2024-02-02,3,Pressure Pro,0.1,Active
+SVC018,Surface Cleaner Attachment,Equipment Parts,3,2,Each,285.00,2024-01-08,1,Pressure Pro,0.03,Active
+SVC019,Chemical Injector,Equipment Parts,6,4,Each,28.00,2024-02-06,4,Pressure Pro,0.15,Active
+SVC020,Pump Oil (SAE 30),Maintenance,8,6,Quart,12.00,2024-02-11,5,Pressure Pro,0.2,Active
+SVC021,Engine Oil (10W-30),Maintenance,12,8,Quart,8.50,2024-02-11,8,Pressure Pro,0.3,Active
+SVC022,Fuel Stabilizer,Maintenance,6,4,16-oz Bottle,9.75,2024-01-30,3,Hardware Plus,0.1,Active
+SVC023,Spark Plugs,Maintenance,15,8,Each,4.25,2024-02-09,6,Hardware Plus,0.2,Active
+SVC024,Air Filter,Maintenance,10,6,Each,15.50,2024-02-04,4,Pressure Pro,0.15,Active
+SVC025,O-Ring Repair Kit,Maintenance,12,8,Kit,22.00,2024-01-28,5,Pressure Pro,0.2,Active
+SVC026,Trigger Gun Repair Kit,Maintenance,8,5,Kit,32.00,2024-01-22,3,Pressure Pro,0.1,Active
+SVC027,Safety Goggles,Safety Equipment,24,12,Each,8.50,2024-02-13,6,SafetyFirst Supply,0.5,Active
+SVC028,Chemical-Resistant Gloves,Safety Equipment,36,18,Pair,6.25,2024-02-14,18,SafetyFirst Supply,1.0,Active
+SVC029,Rubber Work Boots,Safety Equipment,6,4,Pair,52.00,2024-01-15,2,SafetyFirst Supply,0.05,Active
+SVC030,Rain Gear Set,Safety Equipment,8,5,Set,38.00,2024-01-20,3,SafetyFirst Supply,0.1,Active
+SVC031,Caution Signs/Cones,Safety Equipment,12,8,Set of 4,28.00,2024-02-01,4,SafetyFirst Supply,0.2,Active
+SVC032,First Aid Kit,Safety Equipment,4,3,Kit,35.00,2024-01-18,1,SafetyFirst Supply,0.05,Active
+SVC033,Microfiber Towels,Cleaning Supplies,85,40,Pack of 12,18.50,2024-02-15,45,Wholesale Club,3.0,Active
+SVC034,Squeegees (18-inch),Cleaning Supplies,15,8,Each,12.00,2024-02-08,6,Hardware Plus,0.3,Active
+SVC035,Scrub Brushes - Soft Bristle,Cleaning Supplies,22,12,Each,8.50,2024-02-10,10,Hardware Plus,0.5,Active
+SVC036,Scrub Brushes - Stiff Bristle,Cleaning Supplies,18,10,Each,9.75,2024-02-10,8,Hardware Plus,0.4,Active
+SVC037,Extension Pole (6-24ft),Cleaning Supplies,7,5,Each,45.00,2024-01-25,2,Hardware Plus,0.1,Active
+SVC038,5-Gallon Buckets,Cleaning Supplies,28,15,Each,4.50,2024-02-12,12,Hardware Plus,0.8,Active
+SVC039,Measuring Cups Set,Cleaning Supplies,12,8,Set,6.25,2024-02-05,4,Hardware Plus,0.2,Active
+SVC040,Spray Bottles (32oz),Cleaning Supplies,32,15,Each,3.50,2024-02-13,14,Hardware Plus,0.8,Active
+SVC041,Tarps (10x12ft),Job Supplies,10,6,Each,22.00,2024-01-30,4,Hardware Plus,0.2,Active
+SVC042,Duct Tape,Job Supplies,24,12,Roll,6.50,2024-02-11,10,Hardware Plus,0.5,Active
+SVC043,Zip Ties Assortment,Job Supplies,18,10,Pack of 100,8.25,2024-02-09,7,Hardware Plus,0.4,Active
+SVC044,Absorbent Pads,Job Supplies,35,18,Pack of 10,15.50,2024-02-14,16,SafetyFirst Supply,1.0,Active
+SVC045,Business Cards,Marketing,2,1,Box of 500,45.00,2024-01-10,1,PrintPro,N/A,Active
+SVC046,Yard Signs,Marketing,8,5,Each,28.00,2024-01-28,3,PrintPro,N/A,Active
+SVC047,Door Hangers,Marketing,1500,500,Per 1000,85.00,2024-02-02,850,PrintPro,N/A,Active
+SVC048,Vehicle Magnets,Marketing,4,2,Each,35.00,2024-01-05,0,PrintPro,N/A,Active
+SVC049,Invoice Books,Office Supplies,6,4,Book of 50,12.50,2024-02-07,2,Office Depot,N/A,Active
+SVC050,Estimate Forms,Office Supplies,8,5,Pad of 50,9.75,2024-02-06,3,Office Depot,N/A,Active
